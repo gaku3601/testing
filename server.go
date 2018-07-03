@@ -13,19 +13,19 @@ import (
 )
 
 type remoteServer struct {
-	url string
-	ul  []*User
-	fl  []*Friend
+	url string    // remote server url
+	ul  []*User   // UserList
+	fl  []*Friend // FriendList
 }
 
 func newRemoteServer() (*remoteServer, error) {
 	r := new(remoteServer)
 	r.url = "http://fg-69c8cbcd.herokuapp.com/user/"
-	err := r.newUserAndFriendList()
+	err := r.fetchUserAndFriendList()
 	return r, err
 }
 
-func (r *remoteServer) newUserAndFriendList() error {
+func (r *remoteServer) fetchUserAndFriendList() error {
 	// multiple process
 	errChan := make(chan error)
 	wg := new(sync.WaitGroup)
@@ -49,7 +49,7 @@ func (r *remoteServer) newUserAndFriendList() error {
 }
 
 func (r *remoteServer) storeUserStructAndFriendStruct(i int, errChan chan<- error) {
-	s, err := fetchUserData(r.createUrl(i))
+	s, err := r.fetchUserData(i)
 	if err != nil {
 		errChan <- err
 		return
@@ -73,8 +73,8 @@ func (r *remoteServer) createUrl(id int) string {
 	return u.String()
 }
 
-func fetchUserData(url string) (string, error) {
-	resp, err := http.Get(url)
+func (r *remoteServer) fetchUserData(i int) (string, error) {
+	resp, err := http.Get(r.createUrl(i))
 	if err != nil {
 		return "", err
 	}

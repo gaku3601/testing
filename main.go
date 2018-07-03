@@ -11,7 +11,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	if err = storeDatabase(r.ul, r.fl); err != nil {
+	d := newDatabase()
+	if err = d.storeDatabase(r.ul, r.fl); err != nil {
 		log.Fatal(err.Error())
 	}
 }

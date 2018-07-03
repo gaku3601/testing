@@ -4,16 +4,24 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-func storeDatabase(ul []*User, fl []*Friend) error {
-	db, _ := gorm.Open("postgres",
-		"user=postgres dbname=app sslmode=disable")
-	defer db.Close()
-	tx := db.Begin()
-	if err := allDeleteTable(tx); err != nil {
+type database struct {
+	db *gorm.DB
+}
+
+func newDatabase() *database {
+	d := new(database)
+	d.db, _ = gorm.Open("postgres", "user=postgres dbname=app sslmode=disable")
+	return d
+}
+
+func (d *database) storeDatabase(ul []*User, fl []*Friend) error {
+	defer d.db.Close()
+	tx := d.db.Begin()
+	if err := d.allDeleteTable(tx); err != nil {
 		tx.Rollback()
 		return err
 	}
-	if err := createData(ul, fl, tx); err != nil {
+	if err := d.createData(ul, fl, tx); err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -21,7 +29,7 @@ func storeDatabase(ul []*User, fl []*Friend) error {
 	return nil
 }
 
-func allDeleteTable(tx *gorm.DB) error {
+func (d *database) allDeleteTable(tx *gorm.DB) error {
 	if err := tx.Delete(&Friend{}).Error; err != nil {
 		return err
 	}
@@ -31,7 +39,7 @@ func allDeleteTable(tx *gorm.DB) error {
 	return nil
 }
 
-func createData(ul []*User, fl []*Friend, tx *gorm.DB) error {
+func (d *database) createData(ul []*User, fl []*Friend, tx *gorm.DB) error {
 	for _, v := range ul {
 		if err := tx.Create(v).Error; err != nil {
 			return err

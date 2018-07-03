@@ -15,7 +15,9 @@ func TestRemoteServerInternalServerError(t *testing.T) {
 	ts := httptest.NewServer(sampleHandler)
 	defer ts.Close()
 
-	_, err := fetchUserData(ts.URL)
+	r := new(remoteServer)
+	r.url = ts.URL
+	_, err := r.fetchUserData(1)
 	if err.Error() != "500 Internal Server Error" {
 		t.Error(err.Error())
 	}
@@ -29,7 +31,9 @@ func TestRemoteServerStatusNotFound(t *testing.T) {
 	ts := httptest.NewServer(sampleHandler)
 	defer ts.Close()
 
-	_, err := fetchUserData(ts.URL)
+	r := new(remoteServer)
+	r.url = ts.URL
+	_, err := r.fetchUserData(1)
 	if err.Error() != "404 Not Found" {
 		t.Error(err.Error())
 	}
@@ -37,8 +41,10 @@ func TestRemoteServerStatusNotFound(t *testing.T) {
 
 func TestRemoteServerDown(t *testing.T) {
 	url := "http://aaiueo.aiadnuw.com/"
-	_, err := fetchUserData(url)
-	if err.Error() != "Get http://aaiueo.aiadnuw.com/: dial tcp: lookup aaiueo.aiadnuw.com: no such host" {
+	r := new(remoteServer)
+	r.url = url
+	_, err := r.fetchUserData(1)
+	if err.Error() != "Get http://aaiueo.aiadnuw.com/1: dial tcp: lookup aaiueo.aiadnuw.com: no such host" {
 		t.Error(err.Error())
 	}
 }
@@ -52,7 +58,7 @@ func TestNewUserDataInternalServerError(t *testing.T) {
 	defer ts.Close()
 	r := new(remoteServer)
 	r.url = ts.URL
-	err := r.newUserAndFriendList()
+	err := r.fetchUserAndFriendList()
 	if err.Error() != "500 Internal Server Error" {
 		t.Error(err.Error())
 	}
@@ -73,7 +79,7 @@ func TestNewUserData(t *testing.T) {
 	defer ts.Close()
 	r := new(remoteServer)
 	r.url = ts.URL
-	r.newUserAndFriendList()
+	r.fetchUserAndFriendList()
 	for _, v := range r.ul {
 		if v.ID != 1 {
 			t.Errorf("%#v", *v)
@@ -90,5 +96,14 @@ func TestNewUserData(t *testing.T) {
 	}
 	if r.fl[1].To != 5 {
 		t.Errorf("%#v", r.fl[1].To)
+	}
+}
+
+func TestCreateURL(t *testing.T) {
+	r := new(remoteServer)
+	r.url = "http://test/"
+	u := r.createUrl(3)
+	if u != "http://test/3" {
+		t.Error(u)
 	}
 }
