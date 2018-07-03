@@ -52,7 +52,7 @@ func TestNewUserDataInternalServerError(t *testing.T) {
 	defer ts.Close()
 	r := new(remoteServer)
 	r.url = ts.URL
-	_, _, err := newUserAndFriendList(r)
+	err := r.newUserAndFriendList()
 	if err.Error() != "500 Internal Server Error" {
 		t.Error(err.Error())
 	}
@@ -73,8 +73,8 @@ func TestNewUserData(t *testing.T) {
 	defer ts.Close()
 	r := new(remoteServer)
 	r.url = ts.URL
-	ul, fl, _ := newUserAndFriendList(r)
-	for _, v := range ul {
+	r.newUserAndFriendList()
+	for _, v := range r.ul {
 		if v.ID != 1 {
 			t.Errorf("%#v", *v)
 		}
@@ -82,13 +82,13 @@ func TestNewUserData(t *testing.T) {
 			t.Errorf("%#v", *v)
 		}
 	}
-	if fl[0].From != 1 {
-		t.Errorf("%#v", fl[0].From)
+	if r.fl[0].From != 1 {
+		t.Errorf("%#v", r.fl[0].From)
 	}
-	if fl[0].To != 2 {
-		t.Errorf("%#v", fl[0].To)
+	if r.fl[0].To != 2 {
+		t.Errorf("%#v", r.fl[0].To)
 	}
-	if fl[1].To != 5 {
-		t.Errorf("%#v", fl[1].To)
+	if r.fl[1].To != 5 {
+		t.Errorf("%#v", r.fl[1].To)
 	}
 }

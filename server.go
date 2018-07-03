@@ -14,69 +14,57 @@ import (
 
 type remoteServer struct {
 	url string
-}
-
-func newRemoteServer() *remoteServer {
-	r := new(remoteServer)
-	r.url = "http://fg-69c8cbcd.herokuapp.com/user/"
-	return r
-}
-
-type dataForMultipleProcess struct {
-	err error
 	ul  []*User
 	fl  []*Friend
 }
 
-func newUserAndFriendList(r *remoteServer) ([]*User, []*Friend, error) {
-	var ul []*User
-	var fl []*Friend
+func newRemoteServer() (*remoteServer, error) {
+	r := new(remoteServer)
+	r.url = "http://fg-69c8cbcd.herokuapp.com/user/"
+	err := r.newUserAndFriendList()
+	return r, err
+}
 
+func (r *remoteServer) newUserAndFriendList() error {
 	// multiple process
-	dataChan := make(chan dataForMultipleProcess)
+	errChan := make(chan error)
 	wg := new(sync.WaitGroup)
 	for i := 1; i <= 10; i++ {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			storeUserStructAndFriendStruct(i, r, dataChan)
+			r.storeUserStructAndFriendStruct(i, errChan)
 		}(i)
 	}
 	go func() {
 		wg.Wait()
-		close(dataChan)
+		close(errChan)
 	}()
-	for v := range dataChan {
-		ul = append(ul, v.ul...)
-		fl = append(fl, v.fl...)
-		if v.err != nil {
-			return nil, nil, v.err
+	for err := range errChan {
+		if err != nil {
+			return err
 		}
 	}
-	return ul, fl, nil
+	return nil
 }
 
-func storeUserStructAndFriendStruct(i int, r *remoteServer, dataChan chan<- dataForMultipleProcess) {
-	var ul []*User
-	var fl []*Friend
-
+func (r *remoteServer) storeUserStructAndFriendStruct(i int, errChan chan<- error) {
 	s, err := fetchUserData(r.createUrl(i))
 	if err != nil {
-		dataChan <- dataForMultipleProcess{err: err, ul: nil, fl: nil}
+		errChan <- err
 		return
 	}
 	for _, v := range gjson.Get(s, "friends").Array() {
-		fl = append(fl, &Friend{
+		r.fl = append(r.fl, &Friend{
 			From: gjson.Get(s, "id").Int(),
 			To:   v.Int(),
 		})
 	}
 
-	ul = append(ul, &User{
+	r.ul = append(r.ul, &User{
 		ID:   gjson.Get(s, "id").Int(),
 		Name: gjson.Get(s, "name").String(),
 	})
-	dataChan <- dataForMultipleProcess{err: nil, ul: ul, fl: fl}
 }
 
 func (r *remoteServer) createUrl(id int) string {

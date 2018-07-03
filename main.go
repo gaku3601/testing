@@ -7,12 +7,11 @@ import (
 )
 
 func main() {
-	r := newRemoteServer()
-	ul, fl, err := newUserAndFriendList(r)
+	r, err := newRemoteServer()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	if err = storeDatabase(ul, fl); err != nil {
+	if err = storeDatabase(r.ul, r.fl); err != nil {
 		log.Fatal(err.Error())
 	}
 }
