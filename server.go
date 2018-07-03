@@ -7,44 +7,79 @@ import (
 	"net/url"
 	"path"
 	"strconv"
+	"sync"
 
 	"github.com/tidwall/gjson"
 )
 
-type remoteUserDataServer struct {
+type remoteServer struct {
 	url string
 }
 
-func newRemoteUserDataServer() *remoteUserDataServer {
-	r := new(remoteUserDataServer)
+func newRemoteServer() *remoteServer {
+	r := new(remoteServer)
 	r.url = "http://fg-69c8cbcd.herokuapp.com/user/"
 	return r
 }
 
-func newUserData(r *remoteUserDataServer) ([]*User, []*Friend, error) {
+type dataForMultipleProcess struct {
+	err error
+	ul  []*User
+	fl  []*Friend
+}
+
+func newUserAndFriendList(r *remoteServer) ([]*User, []*Friend, error) {
 	var ul []*User
 	var fl []*Friend
-	for i := 1; i <= 10; i++ {
-		s, err := fetchUserData(r.createUrl(i))
-		if err != nil {
-			return nil, nil, err
-		}
-		for _, v := range gjson.Get(s, "friends").Array() {
-			fl = append(fl, &Friend{
-				From: gjson.Get(s, "id").Int(),
-				To:   v.Int(),
-			})
-		}
 
-		ul = append(ul, &User{
-			ID:   gjson.Get(s, "id").Int(),
-			Name: gjson.Get(s, "name").String(),
-		})
+	// multiple process
+	dataChan := make(chan dataForMultipleProcess)
+	wg := new(sync.WaitGroup)
+	for i := 1; i <= 10; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			storeUserStructAndFriendStruct(i, r, dataChan)
+		}(i)
+	}
+	go func() {
+		wg.Wait()
+		close(dataChan)
+	}()
+	for v := range dataChan {
+		ul = append(ul, v.ul...)
+		fl = append(fl, v.fl...)
+		if v.err != nil {
+			return nil, nil, v.err
+		}
 	}
 	return ul, fl, nil
 }
 
-func (r *remoteUserDataServer) createUrl(id int) string {
+func storeUserStructAndFriendStruct(i int, r *remoteServer, dataChan chan<- dataForMultipleProcess) {
+	var ul []*User
+	var fl []*Friend
+
+	s, err := fetchUserData(r.createUrl(i))
+	if err != nil {
+		dataChan <- dataForMultipleProcess{err: err, ul: nil, fl: nil}
+		return
+	}
+	for _, v := range gjson.Get(s, "friends").Array() {
+		fl = append(fl, &Friend{
+			From: gjson.Get(s, "id").Int(),
+			To:   v.Int(),
+		})
+	}
+
+	ul = append(ul, &User{
+		ID:   gjson.Get(s, "id").Int(),
+		Name: gjson.Get(s, "name").String(),
+	})
+	dataChan <- dataForMultipleProcess{err: nil, ul: ul, fl: fl}
+}
+
+func (r *remoteServer) createUrl(id int) string {
 	u, _ := url.Parse(r.url)
 	u.Path = path.Join(u.Path, strconv.Itoa(id))
 	return u.String()

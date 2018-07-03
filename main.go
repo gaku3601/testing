@@ -7,8 +7,8 @@ import (
 )
 
 func main() {
-	r := newRemoteUserDataServer()
-	ul, fl, err := newUserData(r)
+	r := newRemoteServer()
+	ul, fl, err := newUserAndFriendList(r)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

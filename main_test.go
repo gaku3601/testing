@@ -50,9 +50,9 @@ func TestNewUserDataInternalServerError(t *testing.T) {
 	})
 	ts := httptest.NewServer(sampleHandler)
 	defer ts.Close()
-	r := new(remoteUserDataServer)
+	r := new(remoteServer)
 	r.url = ts.URL
-	_, _, err := newUserData(r)
+	_, _, err := newUserAndFriendList(r)
 	if err.Error() != "500 Internal Server Error" {
 		t.Error(err.Error())
 	}
@@ -71,9 +71,9 @@ func TestNewUserData(t *testing.T) {
 	})
 	ts := httptest.NewServer(sampleHandler)
 	defer ts.Close()
-	r := new(remoteUserDataServer)
+	r := new(remoteServer)
 	r.url = ts.URL
-	ul, fl, _ := newUserData(r)
+	ul, fl, _ := newUserAndFriendList(r)
 	for _, v := range ul {
 		if v.ID != 1 {
 			t.Errorf("%#v", *v)
