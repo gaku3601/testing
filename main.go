@@ -2,8 +2,6 @@ package main
 
 import (
 	"log"
-
-	_ "github.com/lib/pq"
 )
 
 func main() {

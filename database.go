@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/jinzhu/gorm"
+	_ "github.com/lib/pq"
 )
 
 type database struct {
