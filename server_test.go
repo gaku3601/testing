@@ -17,7 +17,7 @@ func TestRemoteServerInternalServerError(t *testing.T) {
 
 	r := new(remoteServer)
 	r.url = ts.URL
-	_, err := r.fetchUserData(1)
+	_, err := r.getBody(1)
 	if err.Error() != "500 Internal Server Error" {
 		t.Error(err.Error())
 	}
@@ -33,7 +33,7 @@ func TestRemoteServerStatusNotFound(t *testing.T) {
 
 	r := new(remoteServer)
 	r.url = ts.URL
-	_, err := r.fetchUserData(1)
+	_, err := r.getBody(1)
 	if err.Error() != "404 Not Found" {
 		t.Error(err.Error())
 	}
@@ -43,7 +43,7 @@ func TestRemoteServerDown(t *testing.T) {
 	url := "http://aaiueo.aiadnuw.com/"
 	r := new(remoteServer)
 	r.url = url
-	_, err := r.fetchUserData(1)
+	_, err := r.getBody(1)
 	if err.Error() != "Get http://aaiueo.aiadnuw.com/1: dial tcp: lookup aaiueo.aiadnuw.com: no such host" {
 		t.Error(err.Error())
 	}

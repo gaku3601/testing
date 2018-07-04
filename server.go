@@ -56,7 +56,7 @@ func (r *remoteServer) fetchUserAndFriendList() error {
 }
 
 func (r *remoteServer) storeUserStructAndFriendStruct(i int, errChan chan<- error) {
-	s, err := r.fetchUserData(i)
+	s, err := r.getBody(i)
 	if err != nil {
 		errChan <- err
 		return
@@ -80,7 +80,7 @@ func (r *remoteServer) createUrl(id int) string {
 	return u.String()
 }
 
-func (r *remoteServer) fetchUserData(i int) (string, error) {
+func (r *remoteServer) getBody(i int) (string, error) {
 	resp, err := http.Get(r.createUrl(i))
 	if err != nil {
 		return "", err
