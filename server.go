@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"sort"
 	"strconv"
 	"sync"
 
@@ -22,6 +23,12 @@ func newRemoteServer() (*remoteServer, error) {
 	r := new(remoteServer)
 	r.url = "http://fg-69c8cbcd.herokuapp.com/user/"
 	err := r.fetchUserAndFriendList()
+	if err != nil {
+		return nil, err
+	}
+	// sorting
+	r.sortUserList()
+	r.sortFriendList()
 	return r, err
 }
 
@@ -87,4 +94,20 @@ func (r *remoteServer) fetchUserData(i int) (string, error) {
 	}
 	body, _ := ioutil.ReadAll(resp.Body)
 	return string(body), nil
+}
+
+func (r *remoteServer) sortUserList() {
+	sort.Slice(r.ul, func(i, j int) bool { return r.ul[i].ID < r.ul[j].ID })
+}
+func (r *remoteServer) sortFriendList() {
+	sort.Slice(r.fl, func(i, j int) bool {
+		if r.fl[i].From < r.fl[j].From {
+			return true
+		} else if r.fl[i].From < r.fl[j].From {
+			if r.fl[i].To < r.fl[j].To {
+				return true
+			}
+		}
+		return false
+	})
 }

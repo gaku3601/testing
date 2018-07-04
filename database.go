@@ -29,7 +29,7 @@ func (d *database) storeDatabase(ul []*User, fl []*Friend) error {
 	return nil
 }
 
-func (d *database) allDeleteTable(tx *gorm.DB) error {
+func (_ *database) allDeleteTable(tx *gorm.DB) error {
 	if err := tx.Delete(&Friend{}).Error; err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func (d *database) allDeleteTable(tx *gorm.DB) error {
 	return nil
 }
 
-func (d *database) createData(ul []*User, fl []*Friend, tx *gorm.DB) error {
+func (_ *database) createData(ul []*User, fl []*Friend, tx *gorm.DB) error {
 	for _, v := range ul {
 		if err := tx.Create(v).Error; err != nil {
 			return err
